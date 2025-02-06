@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS customer (
   prefered_make_id INTEGER, -- can be null
 
   -- Logic
-  CHECK (nric ~ '^[STFG]\d{7}[A-Z]$'), -- regex for nric
+  CHECK (nric ~ '^[STFGM]\d{7}[A-Z]$'), -- regex for nric
   CHECK (first_name IS NOT NULL OR last_name IS NOT NULL), -- ensure that customer has at least 1 name field populated
   FOREIGN KEY (prefered_make_id) REFERENCES make(make_id) ON UPDATE NO ACTION ON DELETE CASCADE
 );
