@@ -17,6 +17,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_rent_insert_update ON rent;
 CREATE CONSTRAINT TRIGGER on_rent_insert_update
 AFTER INSERT OR UPDATE ON rent
 DEFERRABLE INITIALLY DEFERRED
@@ -43,6 +44,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_ride_insert_update_overlap ON ride;
 CREATE CONSTRAINT TRIGGER on_ride_insert_update_overlap
 AFTER INSERT OR UPDATE ON ride
 DEFERRABLE INITIALLY DEFERRED
@@ -76,6 +78,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_ride_insert_update_overload ON ride;
 CREATE CONSTRAINT TRIGGER on_ride_insert_update_overload
 AFTER INSERT OR UPDATE ON ride
 DEFERRABLE INITIALLY DEFERRED
@@ -118,6 +121,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_ride_insert_update_delete_license ON ride;
 CREATE CONSTRAINT TRIGGER on_ride_insert_update_delete_license
 AFTER INSERT OR UPDATE OR DELETE ON ride
 DEFERRABLE INITIALLY DEFERRED
