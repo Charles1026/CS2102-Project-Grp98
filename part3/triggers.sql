@@ -5,8 +5,7 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO num_overlaps
   FROM rent r WHERE r.plate = NEW.plate 
-    AND ((r.start_date >= NEW.start_date AND r.start_date <= NEW.end_date)
-      OR (r.end_date >= NEW.start_date AND r.end_date <= NEW.end_date));
+    AND NOT (NEW.end_date < r.start_date OR NEW.start_date > r.end_date); -- takes advantage of start_date <= end_date
 
   -- only 1 rental per car during a period
   IF (num_overlaps > 1) THEN 
@@ -94,17 +93,14 @@ BEGIN
   SELECT COUNT(*) INTO num_license 
     FROM ride r INNER JOIN customer c ON r.passenger = c.nric
     -- Assuming riders ride the entire duration of the rental, we just find same start and end dates 
-    WHERE r.plate = rider.plate AND r.start_date == rider.start_date AND r.start_date == rider.end_date
-      AND c.license = TRUE;
-
+    WHERE r.plate = rider.plate AND r.start_date = rider.start_date AND r.end_date = rider.end_date AND c.license = TRUE;
+    
   RETURN num_license;
 END;
 $$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION check_license() RETURNS TRIGGER AS $$
-DECLARE
-  num_license INT;
 BEGIN
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN 
     IF (count_license(NEW) < 1) THEN 
@@ -114,7 +110,7 @@ BEGIN
 
   IF (TG_OP = 'DELETE' OR TG_OP = 'UPDATE') THEN 
     IF (count_license(OLD) < 1) THEN 
-      RAISE EXCEPTION 'Insert/Update results in car with no driver for %', OLD.plate;
+      RAISE EXCEPTION 'Delete/Update results in car with no driver for %', OLD.plate;
     END IF;
   END IF;
   RETURN NULL;
