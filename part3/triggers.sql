@@ -66,9 +66,7 @@ BEGIN
   -- Count total num riders 
   SELECT COUNT(*) INTO num_riders
   -- Assuming riders ride the entire duration of the rental, we just find same start and end dates 
-  FROM ride r WHERE r.plate = NEW.plate AND r.start_date = NEW.start_date AND r.start_date = NEW.end_date;
-  
-  RAISE NOTICE '% passengers for % capacity', num_riders, car_capacity;
+  FROM ride r WHERE r.plate = NEW.plate AND r.start_date = NEW.start_date AND r.end_date = NEW.end_date;
 
   -- if num riders already exceed car capacity, cant add new rider
   IF (num_riders > car_capacity) THEN 
