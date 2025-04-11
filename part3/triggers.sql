@@ -70,7 +70,7 @@ BEGIN
 
   -- if num riders already exceed car capacity, cant add new rider
   IF (num_riders > car_capacity) THEN 
-    RAISE EXCEPTION 'Insert/Update results in overloaded car for %, %', NEW.passenger, NEW.plate;
+    RAISE EXCEPTION 'Insert/Update results in overloaded car for %, % passengers, % capacity', NEW.plate, num_riders, car_capacity;
   END IF;
 
   RETURN NULL;
