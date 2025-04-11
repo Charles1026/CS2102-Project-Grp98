@@ -66,8 +66,10 @@ BEGIN
   -- Count total num riders 
   SELECT COUNT(*) INTO num_riders
   -- Assuming riders ride the entire duration of the rental, we just find same start and end dates 
-  FROM ride r WHERE r.plate = NEW.plate AND r.start_date == NEW.start_date AND r.start_date == NEW.end_date;
-    
+  FROM ride r WHERE r.plate = NEW.plate AND r.start_date = NEW.start_date AND r.start_date = NEW.end_date;
+  
+  RAISE NOTICE '% passengers for % capacity', num_riders, car_capacity;
+
   -- if num riders already exceed car capacity, cant add new rider
   IF (num_riders > car_capacity) THEN 
     RAISE EXCEPTION 'Insert/Update results in overloaded car for %, %', NEW.passenger, NEW.plate;
@@ -86,6 +88,13 @@ FOR EACH ROW EXECUTE FUNCTION
 
 
 -- Qa.4 Trigger to check at least 1 rider has a driving license 
+CREATE OR REPLACE FUNCTION rental_exists(rider ride) RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM rent r WHERE r.plate = rider.plate AND r.start_date = rider.start_date AND r.end_date = rider.end_date);
+
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION count_license(rider ride) RETURNS INT AS $$
 DECLARE 
   num_license INT;
@@ -94,7 +103,7 @@ BEGIN
     FROM ride r INNER JOIN customer c ON r.passenger = c.nric
     -- Assuming riders ride the entire duration of the rental, we just find same start and end dates 
     WHERE r.plate = rider.plate AND r.start_date = rider.start_date AND r.end_date = rider.end_date AND c.license = TRUE;
-    
+
   RETURN num_license;
 END;
 $$ LANGUAGE plpgsql;
@@ -103,13 +112,13 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION check_license() RETURNS TRIGGER AS $$
 BEGIN
   IF (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') THEN 
-    IF (count_license(NEW) < 1) THEN 
+    IF (rental_exists(NEW) AND count_license(NEW) < 1) THEN 
       RAISE EXCEPTION 'Insert/Update results in car with no driver for %', NEW.plate;
     END IF;
   END IF;
 
   IF (TG_OP = 'DELETE' OR TG_OP = 'UPDATE') THEN 
-    IF (count_license(OLD) < 1) THEN 
+    IF (rental_exists(OLD) AND count_license(OLD) < 1) THEN 
       RAISE EXCEPTION 'Delete/Update results in car with no driver for %', OLD.plate;
     END IF;
   END IF;
